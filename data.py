@@ -45,15 +45,15 @@ def tf_dataset(x, y, batch=8):
     dataset = dataset.prefetch(2)
     return dataset
 
-def loadCityscape():
-    trainPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\CityscapeCorregido\\train')
+def loadCityscape(folder):
+    trainPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\CityscapeCorregido\\' + folder)
     imagesPath = os.path.join(trainPath, 'images')
     maskPath = os.path.join(trainPath, 'masks')
     
     images = []
     masks = []
      
-    print('Loading images and masks for Cityscape dataset...')
+    print('Loading images and masks for ' + folder + ' Cityscape dataset...')
     for image in os.listdir(imagesPath):
         images.append(os.path.join(imagesPath, image))
     for mask in os.listdir(maskPath):
