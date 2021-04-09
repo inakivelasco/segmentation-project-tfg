@@ -49,4 +49,3 @@ def build_unet(shape, num_classes):
     output = Conv2D(num_classes, 1, padding="same", activation="softmax")(x8)
  
     return Model(inputs, output)
-
