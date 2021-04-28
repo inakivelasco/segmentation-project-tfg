@@ -2,13 +2,21 @@ import os
 import cv2
 import numpy as np
 import tensorflow as tf
+
+from skimage import color
+from skimage.segmentation import slic
+from skimage.measure import regionprops
 from skimage.feature import local_binary_pattern
 
 H = 256
 W = 512
+
 radiusLBP = 3
 n_pointsLBP = 8*radiusLBP
 methodLBP = 'default'
+
+K = 500
+m = 12
 
 id2cat = np.array([0,0,0,0,0,0,0, 1,1,1,1, 2,2,2,2,2,2, 3,3,3,3, 4,4, 5, 6,6, 7,7,7,7,7,7,7,7,7])
 categories = np.array(['void', 'flat', 'construction', 'object', 'nature', 'sky', 'human', 'vehicle'])
@@ -16,13 +24,11 @@ categories = np.array(['void', 'flat', 'construction', 'object', 'nature', 'sky'
 def readMask(path):
     path = path.decode("utf-8")
     mask = cv2.imread(path, 0)
-    # mask = cv2.resize(mask, (W, H))
     return mask.astype(np.int32)
 
 def readImage256x512_RGB(x):
     x = x.decode("utf-8")
     x = cv2.imread(x, cv2.IMREAD_COLOR)
-    # x = cv2.resize(x, (W, H))
     x = x / 255.0
     x = x.astype(np.float32)
     return x
@@ -79,7 +85,6 @@ def preprocess256x512_Lab(x, y):
 def readImage256x512_RGB_HSV_Lab(x):
     x = x.decode("utf-8")
     x = cv2.imread(x, cv2.IMREAD_COLOR)
-    # x = cv2.resize(x, (W, H))
     hsv = cv2.cvtColor(x, cv2.COLOR_RGB2HSV)
     hsv[:,:,0] = hsv[:,:,0] / 360.0
     hsv[:,:,1:] = hsv[:,:,1:] / 100.0
@@ -104,7 +109,6 @@ def preprocess256x512_RGB_HSV_Lab(x, y):
 def readImage256x512_RGB_LBP(x):
     x = x.decode("utf-8")
     x = cv2.imread(x, cv2.IMREAD_COLOR)
-    # x = cv2.resize(x, (W, H))
     lbp = local_binary_pattern(cv2.cvtColor(x, cv2.COLOR_RGB2GRAY), n_pointsLBP, radiusLBP, methodLBP)
     x = x / 255.0
     lbp = lbp / (2**n_pointsLBP-1.0)
@@ -122,6 +126,25 @@ def preprocess256x512_RGB_LBP(x, y):
     mask.set_shape([H, W, 4])
     return image, mask
 
+def readImage256x512_RGB_SP(x):
+    x = x.decode("utf-8")
+    x = cv2.imread(x, cv2.IMREAD_COLOR)
+    sp = slic(x, n_segments=K, sigma=0, compactness = m, enforce_connectivity=False, start_label=1)
+    x = color.label2rgb(sp, x, kind='avg', bg_label=-1)
+    x = x / 255.0
+    x = x.astype(np.float32)
+    return x
+def preprocess256x512_RGB_SP(x, y):
+    def f(x, y):
+        image = readImage256x512_RGB_SP(x)
+        mask = readMask(y)
+        return image, mask
+    image, mask = tf.numpy_function(f, [x, y], [tf.float32, tf.int32])    
+    mask = tf.one_hot(mask, 4, dtype=tf.int32)
+    image.set_shape([H, W, 3])
+    mask.set_shape([H, W, 4])
+    return image, mask
+
 def tf_dataset(x, y, batch, modelName): 
     dataset = tf.data.Dataset.from_tensor_slices((x, y))
     dataset = dataset.shuffle(buffer_size=5000)
@@ -136,6 +159,8 @@ def tf_dataset(x, y, batch, modelName):
         dataset = dataset.map(preprocess256x512_RGB_HSV_Lab)
     elif modelName == 'model256x512_RGB_LBP':
         dataset = dataset.map(preprocess256x512_RGB_LBP)
+    elif modelName == 'model256x512_RGB_SP':
+        dataset = dataset.map(preprocess256x512_RGB_SP)
         
     dataset = dataset.batch(batch)
     dataset = dataset.repeat()
