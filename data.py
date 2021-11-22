@@ -14,8 +14,8 @@ radiusLBP = 3
 n_pointsLBP = 8*radiusLBP
 methodLBP = 'default'
 
-K = 500
-m = 12
+K = 500  # n_segments
+m = 12   # compactness
     
 def readMask(path):
     path = path.decode("utf-8")
@@ -161,15 +161,15 @@ def tf_dataset(x, y, batch, modelName):
     dataset = dataset.prefetch(2)
     return dataset
 
-def loadCityscape(folder):
-    trainPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\CityscapeCorrected256x512_4classes\\' + folder)
+def loadCityscape(reductionMethod, trainValTest):
+    trainPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\CityscapeCorrected256x512_4classes_' + reductionMethod + '\\' + trainValTest)
     imagesPath = os.path.join(trainPath, 'images')
     maskPath = os.path.join(trainPath, 'masks')
     
     images = []
     masks = []
      
-    print('Loading images and masks for ' + folder + ' Cityscape dataset...')
+    print('Loading images and masks for ' + reductionMethod + '-' + trainValTest + ' Cityscape dataset...')
     for image in os.listdir(imagesPath):
         images.append(os.path.join(imagesPath, image))
     for mask in os.listdir(maskPath):
