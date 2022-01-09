@@ -95,7 +95,7 @@ imagesTest, masksTest = loadCityscape(reductionMethod, 'test')
 times = []
 
 for modelName in models:
-    nClasses, shape, lr, batchSize, epochs = returnModelParams(modelName)
+    nClasses, shape, lr, batchSize, epochs = returnModelParams(modelName, reductionMethod)
     
     print('Using model' + modelName + ' - ' + reductionMethod)
     

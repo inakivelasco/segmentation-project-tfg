@@ -7,9 +7,6 @@ from skimage import color
 from skimage.segmentation import slic
 from skimage.feature import local_binary_pattern
 
-H = 256
-W = 512
-
 radiusLBP = 3
 n_pointsLBP = 8*radiusLBP
 methodLBP = 'default'
@@ -139,7 +136,16 @@ def preprocess256x512_RGB_SP(x, y):
     mask.set_shape([H, W, 4])
     return image, mask
 
-def tf_dataset(x, y, batch, modelName): 
+def tf_dataset(x, y, batch, modelName, reductionMethod): 
+    global H
+    global W
+    if reductionMethod == 'None':
+        H = 1024
+        W = 2048
+    else:
+        H = 256
+        W = 512
+    
     dataset = tf.data.Dataset.from_tensor_slices((x, y))
     dataset = dataset.shuffle(buffer_size=5000)
     
@@ -162,7 +168,10 @@ def tf_dataset(x, y, batch, modelName):
     return dataset
 
 def loadCityscape(reductionMethod, trainValTest):
-    trainPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\CityscapeCorrected256x512_4classes_' + reductionMethod + '\\' + trainValTest)
+    if reductionMethod in ['bilinearInterpolation', 'meanSlidingWindow']:
+        trainPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\CityscapeCorrected256x512_4classes_' + reductionMethod + '\\' + trainValTest)
+    else:
+        trainPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\CityscapeCorrected1024x2048\\' + trainValTest)
     imagesPath = os.path.join(trainPath, 'images')
     maskPath = os.path.join(trainPath, 'masks')
     
