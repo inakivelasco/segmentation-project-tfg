@@ -38,7 +38,7 @@ def preprocess256x512_RGB(x, y):
 
 def readImage256x512_HSV(x):
     x = x.decode("utf-8")
-    x = cv2.cvtColor(cv2.imread(x, cv2.IMREAD_COLOR), cv2.COLOR_RGB2HSV)
+    x = cv2.cvtColor(cv2.imread(x, cv2.IMREAD_COLOR), cv2.COLOR_BGR2HSV)
     x[:,:,0] = x[:,:,0] / 360.0
     x[:,:,1:] = x[:,:,1:] / 100.0
     x = x.astype(np.float32)
@@ -76,7 +76,7 @@ def preprocess256x512_Lab(x, y):
 def readImage256x512_RGB_HSV_Lab(x):
     x = x.decode("utf-8")
     x = cv2.imread(x, cv2.IMREAD_COLOR)
-    hsv = cv2.cvtColor(x, cv2.COLOR_RGB2HSV)
+    hsv = cv2.cvtColor(x, cv2.COLOR_BGR2HSV)
     hsv[:,:,0] = hsv[:,:,0] / 360.0
     hsv[:,:,1:] = hsv[:,:,1:] / 100.0
     lab = cv2.cvtColor(x, cv2.COLOR_BGR2LAB)
@@ -100,7 +100,7 @@ def preprocess256x512_RGB_HSV_Lab(x, y):
 def readImage256x512_RGB_LBP(x):
     x = x.decode("utf-8")
     x = cv2.imread(x, cv2.IMREAD_COLOR)
-    lbp = local_binary_pattern(cv2.cvtColor(x, cv2.COLOR_RGB2GRAY), n_pointsLBP, radiusLBP, methodLBP)
+    lbp = local_binary_pattern(cv2.cvtColor(x, cv2.COLOR_BGR2GRAY), n_pointsLBP, radiusLBP, methodLBP)
     x = x / 255.0
     lbp = lbp / (2**n_pointsLBP-1.0)
     x = np.dstack((x,lbp))

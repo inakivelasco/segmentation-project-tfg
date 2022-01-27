@@ -36,7 +36,7 @@ np.random.seed(seed)
 tf.random.set_seed(seed)
 
 unetSteps = 4
-modelName = models[0]
+modelName = models[1]
 reductionMethod = reductionMethods[1]
 nClasses, shape, lr, batchSize, epochs = returnModelParams(modelName, reductionMethod)
 

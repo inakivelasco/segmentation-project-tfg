@@ -45,7 +45,7 @@ def readImgToPredict(imgPath, modelName):
     if modelName == 'model256x512_RGB':
         x = x / 255.0
     elif modelName == 'model256x512_HSV':
-        x = cv2.cvtColor(x, cv2.COLOR_RGB2HSV)
+        x = cv2.cvtColor(x, cv2.COLOR_BGR2HSV)
         x[:,:,0] = x[:,:,0] / 360.0
         x[:,:,1:] = x[:,:,1:] / 100.0
     elif modelName == 'model256x512_Lab':
@@ -54,7 +54,7 @@ def readImgToPredict(imgPath, modelName):
         x[:,:,1:] = x[:,:,1:] + 128.0
         x[:,:,1:] = x[:,:,1:] / 255.0
     elif modelName == 'model256x512_RGB_HSV_Lab':
-        hsv = cv2.cvtColor(x, cv2.COLOR_RGB2HSV)
+        hsv = cv2.cvtColor(x, cv2.COLOR_BGR2HSV)
         hsv[:,:,0] = hsv[:,:,0] / 360.0
         hsv[:,:,1:] = hsv[:,:,1:] / 100.0
         lab = cv2.cvtColor(x, cv2.COLOR_BGR2LAB)
@@ -64,7 +64,7 @@ def readImgToPredict(imgPath, modelName):
         x = x / 255.0
         x = np.dstack((x, hsv, lab))
     elif modelName == 'model256x512_RGB_LBP':
-        lbp = local_binary_pattern(cv2.cvtColor(x, cv2.COLOR_RGB2GRAY), n_pointsLBP, radiusLBP, methodLBP)
+        lbp = local_binary_pattern(cv2.cvtColor(x, cv2.COLOR_BGR2GRAY), n_pointsLBP, radiusLBP, methodLBP)
         x = x / 255.0
         lbp = lbp / (2**n_pointsLBP-1.0)
         x = np.dstack((x,lbp))
@@ -83,116 +83,121 @@ def obtainPredictionImg(model, img, nClasses):
     return np.uint8(p)
 
 def writeImgAndPred(img, pred, folder, name):
-    final_image = np.hstack((img, cv2.cvtColor(np.float32(pred), cv2.COLOR_GRAY2RGB)))
+    final_image = np.hstack((img, cv2.cvtColor(np.float32(pred), cv2.COLOR_GRAY2BGR)))
     cv2.imwrite(os.path.join(folder, name), final_image)
 
 unetSteps = 4
-reductionMethod = reductionMethods[0]
+modelName = models[4]
+reductionMethod = reductionMethods[1]
 imagesTrain, masksTrain = loadCityscape(reductionMethod, 'train')
 imagesVal, masksVal = loadCityscape(reductionMethod, 'val')
 imagesTest, masksTest = loadCityscape(reductionMethod, 'test')
 
-times = []
+# times = []
 
-for modelName in models:
-    nClasses, shape, lr, batchSize, epochs = returnModelParams(modelName, reductionMethod)
-    
-    print('Using model' + modelName + ' - ' + reductionMethod)
-    
-    with open(f'histories\\{unetSteps}UnetSteps\\{reductionMethod}\\hist_{modelName}', 'rb') as f:
-        x = pickle.load(f)
-    
-    model = tf.keras.models.load_model(f'models\\{unetSteps}UnetSteps\\{reductionMethod}\\{modelName}.h5', custom_objects={"Mean_IOU": Mean_IOU})
-    
-    resultPath = f"results\\{unetSteps}UnetSteps\\{reductionMethod}\\{modelName}_{round(max(x['accuracy']), 3)}"
-    if not os.path.exists(resultPath):
-        os.makedirs(resultPath)
-    resultPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), resultPath)
-    
-    t0 = time.time()
-    for i in range(10):
-        # Train
-        x = readImgToPredict(imagesTrain[i], modelName)
-        p = obtainPredictionImg(model, x, nClasses)
-        writeImgAndPred(cv2.imread(imagesTrain[i], cv2.IMREAD_COLOR), p, resultPath, str(i) + '_train.png')
-        
-        # Val
-        x = readImgToPredict(imagesVal[i], modelName)
-        p = obtainPredictionImg(model, x, nClasses)
-        writeImgAndPred(cv2.imread(imagesVal[i], cv2.IMREAD_COLOR), p, resultPath, str(i) + '_val.png')
-        
-        # Test
-        x = readImgToPredict(imagesTest[i], modelName)
-        p = obtainPredictionImg(model, x, nClasses)
-        writeImgAndPred(cv2.imread(imagesTest[i], cv2.IMREAD_COLOR), p, resultPath, str(i) + '_test.png')
-    
-    totalTime = time.time() - t0
-    print('Total time: ' + str(totalTime) + '\n')  
-    times.append(totalTime)
+nClasses, shape, lr, batchSize, epochs = returnModelParams(modelName, reductionMethod)
 
-orderedIndex = np.argsort(times)
-fig = plt.figure(figsize=(20,10))
-plt.barh(np.array(models)[orderedIndex], np.array(times)[orderedIndex])
-plt.title('Time to process 30 already reduced images')
-plt.xlabel('Time in seconds')
-plt.savefig(f'graphs\\{unetSteps}UnetSteps\\{reductionMethod}\\_execution_time.png')
+print('Using model' + modelName + ' - ' + reductionMethod + ' - ' + str(unetSteps) + ' steps\n')
+
+with open(f'histories\\{unetSteps}UnetSteps\\{reductionMethod}\\hist_{modelName}', 'rb') as f:
+    x = pickle.load(f)
+    
+model = tf.keras.models.load_model(f'models\\{unetSteps}UnetSteps\\{reductionMethod}\\{modelName}.h5', custom_objects={"Mean_IOU": Mean_IOU})
+
+resultPath = f"results\\{unetSteps}UnetSteps\\{reductionMethod}\\{modelName}_{round(max(x['accuracy']), 3)}"
+if not os.path.exists(resultPath):
+    os.makedirs(resultPath)
+resultPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), resultPath)
+
+t0 = time.time()
+for i in range(50):
+    # Train
+    x = readImgToPredict(imagesTrain[i], modelName)
+    p = obtainPredictionImg(model, x, nClasses)
+    writeImgAndPred(cv2.imread(imagesTrain[i], cv2.IMREAD_COLOR), p, resultPath, str(i) + '_train.png')
+    
+    # Val
+    x = readImgToPredict(imagesVal[i], modelName)
+    p = obtainPredictionImg(model, x, nClasses)
+    writeImgAndPred(cv2.imread(imagesVal[i], cv2.IMREAD_COLOR), p, resultPath, str(i) + '_val.png')
+    
+    # Test
+    x = readImgToPredict(imagesTest[i], modelName)
+    p = obtainPredictionImg(model, x, nClasses)
+    writeImgAndPred(cv2.imread(imagesTest[i], cv2.IMREAD_COLOR), p, resultPath, str(i) + '_test.png')
+
+totalTime = time.time() - t0
+print('Total time: ' + str(totalTime) + '\n')  
+# times.append(totalTime)
+
+# orderedIndex = np.argsort(times)
+# fig = plt.figure(figsize=(20,10))
+# plt.barh(np.array(models)[orderedIndex], np.array(times)[orderedIndex])
+# plt.title('Time to process 30 already reduced images')
+# plt.xlabel('Time in seconds')
+# graphPath = f'graphs\\{unetSteps}UnetSteps\\{reductionMethod}'
+# if not os.path.exists(graphPath):
+#         os.makedirs(graphPath)
+# plt.savefig(f'{graphPath}\\_execution_time.png')
 
 # ----------------------------------------------------------------------------
-H = 256
-W = 512
-id2cat = np.array([0,0,0,0,0,0,0, 1,1,1,1, 0,0,0,0,0,0, 0,0,0,0, 0,0, 0, 3,3, 2,2,2,2,2,2,2,2,2])
+# H = 256
+# W = 512
+# id2cat = np.array([0,0,0,0,0,0,0, 1,1,1,1, 0,0,0,0,0,0, 0,0,0,0, 0,0, 0, 3,3, 2,2,2,2,2,2,2,2,2])
 
-trainingPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\Cityscape')
-imagesPath = os.path.join(trainingPath, 'train')
-maskPath = os.path.join(trainingPath, 'train' + 'GT')
+# trainingPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\Cityscape')
+# imagesPath = os.path.join(trainingPath, 'train')
+# maskPath = os.path.join(trainingPath, 'train' + 'GT')
 
-times = []
-for reductionMethod in reductionMethods:
-    t0 = time.time()
-    if reductionMethod == 'bilinearInterpolation':
-        print(f'Reading with {reductionMethod} method...')
-        for city in os.listdir(imagesPath):
-            for image in os.listdir(os.path.join(imagesPath, city))[:10]:
-                cv2.resize(cv2.imread(os.path.join(imagesPath, city, image)), (W, H))
-            for mask in os.listdir(os.path.join(maskPath, city))[:40]:
-                if 'label' in mask:
-                    id2cat[cv2.resize(cv2.imread(os.path.join(maskPath, city, mask)), (W, H), interpolation = cv2.INTER_NEAREST)]
+# times = []
+# for reductionMethod in reductionMethods[1:]:
+#     t0 = time.time()
+#     print(f'Reading with {reductionMethod} method...')
+    
+#     if reductionMethod == 'bilinearInterpolation':
+#         for city in os.listdir(imagesPath):
+#             for image in os.listdir(os.path.join(imagesPath, city))[:10]:
+#                 cv2.resize(cv2.imread(os.path.join(imagesPath, city, image)), (W, H))
+#             for mask in os.listdir(os.path.join(maskPath, city))[:40]:
+#                 if 'label' in mask:
+#                     id2cat[cv2.resize(cv2.imread(os.path.join(maskPath, city, mask)), (W, H), interpolation = cv2.INTER_NEAREST)]
                     
-            break
-    elif reductionMethod == 'meanSlidingWindow':
-        rows = np.arange(0,H*4,4)
-        columns = np.arange(0,W*4,4)
+#     elif reductionMethod == 'meanSlidingWindow':
+#         rows = np.arange(0,H*4,4)
+#         columns = np.arange(0,W*4,4)
             
-        for city in os.listdir(imagesPath):
-            for image in os.listdir(os.path.join(imagesPath, city))[:10]:
-                originalImg = cv2.imread(os.path.join(imagesPath, city, image))
-                newImg = np.zeros([H, W, 3], dtype=np.uint8)
+#         for city in os.listdir(imagesPath):
+#             for image in os.listdir(os.path.join(imagesPath, city))[:10]:
+#                 originalImg = cv2.imread(os.path.join(imagesPath, city, image))
+#                 newImg = np.zeros([H, W, 3], dtype=np.uint8)
                 
-                for row in rows:
-                    for column in columns:
-                        newImg[row//4, column//4, :] = np.mean(originalImg[row:row+4, column:column+4, :], axis=(0,1))
+#                 for row in rows:
+#                     for column in columns:
+#                         newImg[row//4, column//4, :] = np.mean(originalImg[row:row+4, column:column+4, :], axis=(0,1))
                 
-            for mask in os.listdir(os.path.join(maskPath, city))[:40]:
-                if 'label' in mask:
-                    originalMask = cv2.imread(os.path.join(maskPath, city, mask), 0)
-                    newMask = np.zeros([H, W], dtype=np.uint8)
+#             for mask in os.listdir(os.path.join(maskPath, city))[:40]:
+#                 if 'label' in mask:
+#                     originalMask = cv2.imread(os.path.join(maskPath, city, mask), 0)
+#                     newMask = np.zeros([H, W], dtype=np.uint8)
                     
-                    for row in rows:
-                        for column in columns:
-                            newMask[row//4, column//4] = stats.mode(originalMask[row:row+4, column:column+4],axis=None)[0][0]
-                    id2cat[newMask]
-            break
+#                     for row in rows:
+#                         for column in columns:
+#                             newMask[row//4, column//4] = stats.mode(originalMask[row:row+4, column:column+4],axis=None)[0][0]
+#                     id2cat[newMask]
+#             break
     
-    totalTime = time.time() - t0
-    print('Total time: ' + str(totalTime) + '\n')  
-    times.append(totalTime)
+#     totalTime = time.time() - t0
+#     print('\tTotal time: ' + str(totalTime) + '\n')  
+#     times.append(totalTime)
     
-orderedIndex = np.argsort(times)
-fig = plt.figure(figsize=(20,10))
-plt.barh(np.array(reductionMethods)[orderedIndex], np.array(times)[orderedIndex])
-plt.title('Time to read 10 images and 10 masks')
-plt.xlabel('Time in seconds')
-plt.savefig(f'graphs\\{unetSteps}UnetSteps\\reading_time.png')
+# orderedIndex = np.argsort(times)
+# fig = plt.figure(figsize=(20,10))
+# plt.barh(np.array(reductionMethods[1:])[orderedIndex], np.array(times)[orderedIndex])
+# plt.title('Time to read 10 images and 10 masks')
+# plt.xlabel('Time in seconds')
+# if not os.path.exists('graphs'):
+#         os.makedirs('graphs')
+# plt.savefig('graphs\\reading_time.png')
 
 
 

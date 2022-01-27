@@ -4,7 +4,7 @@ reductionMethods = ['None', 'bilinearInterpolation', 'meanSlidingWindow']
 def returnModelParams(modelName, reductionMethod):
     epochs = 20
     lr = 1e-4 
-    batchSize = 4
+    batchSize = 8
     nClasses = 4
     
     if reductionMethod == 'None':
