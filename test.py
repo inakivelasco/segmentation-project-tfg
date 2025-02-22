@@ -4,15 +4,14 @@ import time
 import pickle
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
 
-from scipy import stats
 from skimage import color
 from skimage.segmentation import slic
 from skimage.feature import local_binary_pattern
 
 from data import loadCityscape
 from modelParameters import models, returnModelParams, reductionMethods
+
 
 def Mean_IOU(y_true, y_pred):
     nb_classes = K.int_shape(y_pred)[-1]
@@ -93,8 +92,6 @@ imagesTrain, masksTrain = loadCityscape(reductionMethod, 'train')
 imagesVal, masksVal = loadCityscape(reductionMethod, 'val')
 imagesTest, masksTest = loadCityscape(reductionMethod, 'test')
 
-# times = []
-
 nClasses, shape, lr, batchSize, epochs = returnModelParams(modelName, reductionMethod)
 
 print('Using model' + modelName + ' - ' + reductionMethod + ' - ' + str(unetSteps) + ' steps\n')
@@ -127,98 +124,4 @@ for i in range(50):
     writeImgAndPred(cv2.imread(imagesTest[i], cv2.IMREAD_COLOR), p, resultPath, str(i) + '_test.png')
 
 totalTime = time.time() - t0
-print('Total time: ' + str(totalTime) + '\n')  
-# times.append(totalTime)
-
-# orderedIndex = np.argsort(times)
-# fig = plt.figure(figsize=(20,10))
-# plt.barh(np.array(models)[orderedIndex], np.array(times)[orderedIndex])
-# plt.title('Time to process 30 already reduced images')
-# plt.xlabel('Time in seconds')
-# graphPath = f'graphs\\{unetSteps}UnetSteps\\{reductionMethod}'
-# if not os.path.exists(graphPath):
-#         os.makedirs(graphPath)
-# plt.savefig(f'{graphPath}\\_execution_time.png')
-
-# ----------------------------------------------------------------------------
-# H = 256
-# W = 512
-# id2cat = np.array([0,0,0,0,0,0,0, 1,1,1,1, 0,0,0,0,0,0, 0,0,0,0, 0,0, 0, 3,3, 2,2,2,2,2,2,2,2,2])
-
-# trainingPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\Cityscape')
-# imagesPath = os.path.join(trainingPath, 'train')
-# maskPath = os.path.join(trainingPath, 'train' + 'GT')
-
-# times = []
-# for reductionMethod in reductionMethods[1:]:
-#     t0 = time.time()
-#     print(f'Reading with {reductionMethod} method...')
-    
-#     if reductionMethod == 'bilinearInterpolation':
-#         for city in os.listdir(imagesPath):
-#             for image in os.listdir(os.path.join(imagesPath, city))[:10]:
-#                 cv2.resize(cv2.imread(os.path.join(imagesPath, city, image)), (W, H))
-#             for mask in os.listdir(os.path.join(maskPath, city))[:40]:
-#                 if 'label' in mask:
-#                     id2cat[cv2.resize(cv2.imread(os.path.join(maskPath, city, mask)), (W, H), interpolation = cv2.INTER_NEAREST)]
-                    
-#     elif reductionMethod == 'meanSlidingWindow':
-#         rows = np.arange(0,H*4,4)
-#         columns = np.arange(0,W*4,4)
-            
-#         for city in os.listdir(imagesPath):
-#             for image in os.listdir(os.path.join(imagesPath, city))[:10]:
-#                 originalImg = cv2.imread(os.path.join(imagesPath, city, image))
-#                 newImg = np.zeros([H, W, 3], dtype=np.uint8)
-                
-#                 for row in rows:
-#                     for column in columns:
-#                         newImg[row//4, column//4, :] = np.mean(originalImg[row:row+4, column:column+4, :], axis=(0,1))
-                
-#             for mask in os.listdir(os.path.join(maskPath, city))[:40]:
-#                 if 'label' in mask:
-#                     originalMask = cv2.imread(os.path.join(maskPath, city, mask), 0)
-#                     newMask = np.zeros([H, W], dtype=np.uint8)
-                    
-#                     for row in rows:
-#                         for column in columns:
-#                             newMask[row//4, column//4] = stats.mode(originalMask[row:row+4, column:column+4],axis=None)[0][0]
-#                     id2cat[newMask]
-#             break
-    
-#     totalTime = time.time() - t0
-#     print('\tTotal time: ' + str(totalTime) + '\n')  
-#     times.append(totalTime)
-    
-# orderedIndex = np.argsort(times)
-# fig = plt.figure(figsize=(20,10))
-# plt.barh(np.array(reductionMethods[1:])[orderedIndex], np.array(times)[orderedIndex])
-# plt.title('Time to read 10 images and 10 masks')
-# plt.xlabel('Time in seconds')
-# if not os.path.exists('graphs'):
-#         os.makedirs('graphs')
-# plt.savefig('graphs\\reading_time.png')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+print('Total time: ' + str(totalTime) + '\n')

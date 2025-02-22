@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from scipy import stats
 
+
 def windowMean(window):
     return np.mean(np.mean(window,axis=0), axis=0)
 
@@ -30,30 +31,6 @@ categories = np.array(['void', 'flat', 'construction', 'object', 'nature', 'sky'
 trainingPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\Cityscape')
 imagesPath = os.path.join(trainingPath, trainValTest)
 maskPath = os.path.join(trainingPath, trainValTest + 'GT')
-
-# originalPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\Cityscape')
-# newPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\CityscapeCorrected1024x2048')
-
-# imagesPath = os.path.join(originalPath, trainValTest)
-# newImagesPath = os.path.join(newPath, trainValTest, 'images')
-
-# masksPath = os.path.join(originalPath, f'{trainValTest}GT')
-# newMasksPath = os.path.join(newPath, trainValTest, 'masks')
-
-# if not os.path.exists(newImagesPath):
-#     os.makedirs(newImagesPath)
-# if not os.path.exists(newMasksPath):
-#     os.makedirs(newMasksPath)
-
-# for city in os.listdir(imagesPath):
-#     print('\tLoading', city)
-#     for image in os.listdir(os.path.join(imagesPath, city)):
-#         cv2.imwrite(os.path.join(newImagesPath, image), cv2.imread(os.path.join(imagesPath, city, image)))
-#     for mask in os.listdir(os.path.join(masksPath, city)):
-#         if 'label' in mask:
-#             cv2.imwrite(os.path.join(newMasksPath, mask), id2cat[cv2.imread(os.path.join(masksPath, city, mask), 0)])
-
-
 
 newPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datasets\\' + dataset + '_' + reductionMethod)
 if not os.path.exists(newPath):
@@ -102,4 +79,3 @@ elif reductionMethod == 'meanSlidingWindow':
                     for column in columns:
                         newMask[row//4, column//4] = stats.mode(originalMask[row:row+4, column:column+4],axis=None)[0][0]
                 cv2.imwrite(os.path.join(newPath, 'masks', mask), id2cat[newMask])
-            

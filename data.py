@@ -7,6 +7,7 @@ from skimage import color
 from skimage.segmentation import slic
 from skimage.feature import local_binary_pattern
 
+
 radiusLBP = 3
 n_pointsLBP = 8*radiusLBP
 methodLBP = 'default'
@@ -187,34 +188,3 @@ def loadCityscape(reductionMethod, trainValTest):
     print('Loaded {} images\n'.format(len(images)))
     
     return images, masks
-
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
- 
-
-

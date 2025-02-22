@@ -22,5 +22,3 @@ def returnModelParams(modelName, reductionMethod):
         shape = (height, width, 4)
         
     return nClasses, shape, lr, batchSize, epochs
-
-

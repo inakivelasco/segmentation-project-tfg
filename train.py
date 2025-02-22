@@ -12,6 +12,7 @@ from model import build_unet
 from data import loadCityscape, tf_dataset
 from modelParameters import models, returnModelParams, reductionMethods
 
+
 def Mean_IOU(y_true, y_pred):
     nb_classes = K.int_shape(y_pred)[-1]
     iou = []
@@ -84,11 +85,3 @@ history.history['training_time'] = trainingTime
 
 with open(f'{historyPath}\\hist_{modelName}', 'wb') as fd:
         pickle.dump(history.history, fd)
-        
-
-        
-
-
-
-
-

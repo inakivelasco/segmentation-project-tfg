@@ -1,17 +1,11 @@
 import os
-import cv2
 import pickle
 import numpy as np
-from skimage.measure import regionprops
-from skimage import color
-from skimage.segmentation import slic, watershed
-from skimage.segmentation import mark_boundaries
-from skimage.feature import local_binary_pattern
-import time
 import matplotlib.pyplot as plt
 
 from data import loadCityscape
 from modelParameters import models, returnModelParams, reductionMethods
+
 
 unetSteps = 4
 modelName = models[2]
@@ -53,16 +47,8 @@ for i in range(3):
 axs[0].set_ylim([0.6,1])
 
 fig.suptitle(f'{unetSteps} unet steps', fontsize=24,y = 0.92)
-
-# print(modelName)
-# print(np.max(x['accuracy']))
-# print(np.max(x['Mean_IOU']))
     
 graphPath = f'graphs\\{unetSteps}UnetSteps\\{reductionMethod}'
 if not os.path.exists(graphPath):
     os.makedirs(graphPath)
 fig.savefig(f'{graphPath}\\{modelName}_acc_loss_IOU.png')
-
-
-
-
